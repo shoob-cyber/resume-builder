@@ -147,7 +147,7 @@ Before you begin, ensure you have the following installed:
 #### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/resume-builder.git
+git clone https://github.com/shoob-cyber/resume-builder
 cd resume-builder
 ```
 
@@ -595,8 +595,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 👨‍💻 Author
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
+- GitHub: [@shoob-cyber](https://github.com/shoob-cyber)
 
 ---
 
@@ -616,7 +615,7 @@ If you encounter any issues or have questions:
 
 1. Check the [Troubleshooting](#-troubleshooting) section
 2. Open an issue on GitHub
-3. Contact: your.email@example.com
+3. Contact: sahabuddin.seikh28@gmail.com
 
 ---
 
@@ -624,6 +623,6 @@ If you encounter any issues or have questions:
 
 **⭐ If you find this project helpful, please give it a star!**
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by **Shoob-cyber**
 
 </div>
