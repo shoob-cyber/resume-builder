@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ResumePreview = ({ resume }) => {
-  if (!resume) {
+  const [previewData, setPreviewData] = useState(null);
+
+  useEffect(() => {
+    setPreviewData(resume);
+  }, [resume]);
+
+  if (!previewData) {
     return (
       <motion.div
         initial={{ opacity: 0, x: 50 }}
@@ -56,50 +62,54 @@ const ResumePreview = ({ resume }) => {
             animate={{ scale: 1, opacity: 1 }}
             className="text-4xl font-bold text-gradient mb-3"
           >
-            {resume.personalInfo.fullName}
+            {previewData.personalInfo.fullName}
           </motion.h1>
           <div className="mt-3 text-sm text-gray-600 space-y-2">
-            {resume.personalInfo.email && (
+            {previewData.personalInfo.email && (
               <motion.p
                 variants={sectionVariants}
                 className="flex items-center justify-center gap-2"
               >
                 <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">📧</span>
-                {resume.personalInfo.email}
+                {previewData.personalInfo.email}
               </motion.p>
             )}
-            {resume.personalInfo.phone && (
+            {previewData.personalInfo.phone && (
               <motion.p
                 variants={sectionVariants}
                 className="flex items-center justify-center gap-2"
               >
                 <span className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">📱</span>
-                {resume.personalInfo.phone}
+                {previewData.personalInfo.phone}
               </motion.p>
             )}
-            {resume.personalInfo.address && (
+            {previewData.personalInfo.address && (
               <motion.p
                 variants={sectionVariants}
                 className="flex items-center justify-center gap-2"
               >
                 <span className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">📍</span>
-                {resume.personalInfo.address}
+                {previewData.personalInfo.address}
               </motion.p>
             )}
             <div className="flex justify-center gap-4 mt-3">
-              {resume.personalInfo.linkedin && (
+              {previewData.personalInfo.linkedin && (
                 <motion.a
                   whileHover={{ scale: 1.1, y: -2 }}
-                  href={resume.personalInfo.linkedin}
+                  href={previewData.personalInfo.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
                 >
                   LinkedIn
                 </motion.a>
               )}
-              {resume.personalInfo.website && (
+              {previewData.personalInfo.website && (
                 <motion.a
                   whileHover={{ scale: 1.1, y: -2 }}
-                  href={resume.personalInfo.website}
+                  href={previewData.personalInfo.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors"
                 >
                   Website
@@ -110,7 +120,7 @@ const ResumePreview = ({ resume }) => {
         </motion.div>
 
         {/* Summary */}
-        {resume.summary && (
+        {previewData.summary && (
           <motion.div variants={sectionVariants}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-2xl">📝</span>
@@ -122,34 +132,44 @@ const ResumePreview = ({ resume }) => {
               transition={{ delay: 0.2 }}
               className="text-gray-700 text-sm leading-relaxed p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl"
             >
-              {resume.summary}
+              {previewData.summary}
             </motion.p>
           </motion.div>
         )}
 
         {/* Experience */}
-        {resume.experience && resume.experience.length > 0 && (
+        {previewData.experience && previewData.experience.length > 0 && (
           <motion.div variants={sectionVariants}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">💼</span>
-              <h2 className="text-xl font-bold text-gray-900">Experience</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">💼</span>
+                <h2 className="text-xl font-bold text-gray-900">Experience</h2>
+              </div>
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold"
+              >
+                {previewData.experience.length} {previewData.experience.length === 1 ? 'entry' : 'entries'}
+              </motion.span>
             </div>
             <AnimatePresence>
-              {resume.experience.map((exp, index) => (
+              {previewData.experience.map((exp, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ x: 4 }}
-                  className="mb-5 p-4 rounded-xl bg-white border-l-4 border-blue-500 hover:shadow-lg transition-all duration-300"
+                  className="mb-5 p-4 rounded-xl bg-white border-l-4 border-emerald-500 hover:shadow-lg transition-all duration-300"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-bold text-gray-900 text-lg">{exp.position}</h3>
                       <p className="text-gray-700 font-medium">{exp.company}</p>
                     </div>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold whitespace-nowrap">
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold whitespace-nowrap">
                       {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
                     </span>
                   </div>
@@ -163,25 +183,35 @@ const ResumePreview = ({ resume }) => {
         )}
 
         {/* Education */}
-        {resume.education && resume.education.length > 0 && (
+        {previewData.education && previewData.education.length > 0 && (
           <motion.div variants={sectionVariants}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🎓</span>
-              <h2 className="text-xl font-bold text-gray-900">Education</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🎓</span>
+                <h2 className="text-xl font-bold text-gray-900">Education</h2>
+              </div>
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold"
+              >
+                {previewData.education.length} {previewData.education.length === 1 ? 'entry' : 'entries'}
+              </motion.span>
             </div>
             <AnimatePresence>
-              {resume.education.map((edu, index) => (
+              {previewData.education.map((edu, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ x: 4 }}
                   className="mb-4 p-4 rounded-xl bg-white border-l-4 border-purple-500 hover:shadow-lg transition-all duration-300"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-bold text-gray-900">{edu.degree} in {edu.field}</h3>
+                      <h3 className="font-bold text-gray-900">{edu.degree} {edu.field && `in ${edu.field}`}</h3>
                       <p className="text-gray-700">{edu.institution}</p>
                     </div>
                     <span className="text-sm text-gray-600 whitespace-nowrap">
@@ -202,81 +232,38 @@ const ResumePreview = ({ resume }) => {
         )}
 
         {/* Skills */}
-        {resume.skills && resume.skills.length > 0 && (
+        {previewData.skills && previewData.skills.length > 0 && (
           <motion.div variants={sectionVariants}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">⚡</span>
-              <h2 className="text-xl font-bold text-gray-900">Skills</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">⚡</span>
+                <h2 className="text-xl font-bold text-gray-900">Skills</h2>
+              </div>
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold"
+              >
+                {previewData.skills.filter(s => s.trim()).length} skills
+              </motion.span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {resume.skills.map((skill, index) => (
-                <motion.span
-                  key={index}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ scale: 1.1, y: -2 }}
-                  className="px-4 py-2 gradient-primary text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-glow transition-all duration-300"
-                >
-                  {skill}
-                </motion.span>
-              ))}
+              <AnimatePresence>
+                {previewData.skills.filter(s => s.trim()).map((skill, index) => (
+                  <motion.span
+                    key={index}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-glow transition-all duration-300"
+                  >
+                    {skill}
+                  </motion.span>
+                ))}
+              </AnimatePresence>
             </div>
-          </motion.div>
-        )}
-
-        {/* Projects */}
-        {resume.projects && resume.projects.length > 0 && (
-          <motion.div variants={sectionVariants}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">📁</span>
-              <h2 className="text-xl font-bold text-gray-900">Projects</h2>
-            </div>
-            <AnimatePresence>
-              {resume.projects.map((project, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ x: 4 }}
-                  className="mb-4 p-4 rounded-xl bg-white border-l-4 border-green-500 hover:shadow-lg transition-all duration-300"
-                >
-                  <h3 className="font-bold text-gray-900">{project.name}</h3>
-                  <p className="text-sm text-gray-700 mt-1">{project.description}</p>
-                  {project.link && (
-                    <a href={project.link} className="text-sm text-blue-600 hover:underline mt-1 inline-block">
-                      View Project
-                    </a>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
-        {/* Certifications */}
-        {resume.certifications && resume.certifications.length > 0 && (
-          <motion.div variants={sectionVariants}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">📜</span>
-              <h2 className="text-xl font-bold text-gray-900">Certifications</h2>
-            </div>
-            <AnimatePresence>
-              {resume.certifications.map((cert, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ x: 4 }}
-                  className="mb-2 p-4 rounded-xl bg-white border-l-4 border-red-500 hover:shadow-lg transition-all duration-300"
-                >
-                  <p className="font-semibold text-gray-900">{cert.name}</p>
-                  <p className="text-sm text-gray-700">{cert.issuer} - {cert.date}</p>
-                </motion.div>
-              ))}
-            </AnimatePresence>
           </motion.div>
         )}
       </motion.div>
