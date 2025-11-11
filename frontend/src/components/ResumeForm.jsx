@@ -103,6 +103,15 @@ const ResumeForm = ({ initialData, onSave, isEdit }) => {
     { id: 'skills', label: 'Skills', icon: '⚡' },
   ];
 
+  const personalFields = [
+    { name: 'fullName', placeholder: 'Full Name *', type: 'text', required: true },
+    { name: 'email', placeholder: 'Email *', type: 'email', required: true },
+    { name: 'phone', placeholder: 'Phone', type: 'tel' },
+    { name: 'address', placeholder: 'Address', type: 'text' },
+    { name: 'linkedin', placeholder: 'LinkedIn URL', type: 'url' },
+    { name: 'website', placeholder: 'Website', type: 'url' },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -50 }}
@@ -156,39 +165,7 @@ const ResumeForm = ({ initialData, onSave, isEdit }) => {
                 <span>👤</span> Personal Information
               </h3>
               <div className="grid grid-cols-1 gap-4">
-                {{
-                  name: 'fullName',
-                  placeholder: 'Full Name *',
-                  type: 'text',
-                  required: true
-                },
-                {
-                  name: 'email',
-                  placeholder: 'Email *',
-                  type: 'email',
-                  required: true
-                },
-                {
-                  name: 'phone',
-                  placeholder: 'Phone',
-                  type: 'tel'
-                },
-                {
-                  name: 'address',
-                  placeholder: 'Address',
-                  type: 'text'
-                },
-                {
-                  name: 'linkedin',
-                  placeholder: 'LinkedIn URL',
-                  type: 'url'
-                },
-                {
-                  name: 'website',
-                  placeholder: 'Website',
-                  type: 'url'
-                }
-                }.map((field, index) => (
+                {personalFields.map((field, index) => (
                   <motion.div
                     key={field.name}
                     initial={{ opacity: 0, y: 20 }}
@@ -283,16 +260,14 @@ const ResumeForm = ({ initialData, onSave, isEdit }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                     <div className="grid grid-cols-2 gap-3">
-                      <motion.input
-                        whileFocus={{ scale: 1.01 }}
+                      <input
                         type="month"
                         placeholder="Start Date"
                         value={exp.startDate}
                         onChange={(e) => handleArrayChange('experience', index, 'startDate', e.target.value)}
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       />
-                      <motion.input
-                        whileFocus={{ scale: 1.01 }}
+                      <input
                         type="month"
                         placeholder="End Date"
                         value={exp.endDate}
@@ -310,13 +285,12 @@ const ResumeForm = ({ initialData, onSave, isEdit }) => {
                       />
                       <span className="text-sm">Currently working here</span>
                     </label>
-                    <motion.textarea
-                      whileFocus={{ scale: 1.01 }}
+                    <textarea
                       placeholder="Job Description"
                       value={exp.description}
                       onChange={(e) => handleArrayChange('experience', index, 'description', e.target.value)}
                       rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                     <motion.button
                       whileHover={{ scale: 1.05, backgroundColor: "#ef4444" }}
@@ -365,24 +339,21 @@ const ResumeForm = ({ initialData, onSave, isEdit }) => {
                     exit={{ opacity: 0, height: 0 }}
                     className="border-2 border-gray-200 p-5 rounded-2xl mb-4 space-y-3 bg-white hover:border-blue-300 transition-all duration-300"
                   >
-                    <motion.input
-                      whileFocus={{ scale: 1.01 }}
+                    <input
                       type="text"
                       placeholder="Institution"
                       value={edu.institution}
                       onChange={(e) => handleArrayChange('education', index, 'institution', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
-                    <motion.input
-                      whileFocus={{ scale: 1.01 }}
+                    <input
                       type="text"
                       placeholder="Degree"
                       value={edu.degree}
                       onChange={(e) => handleArrayChange('education', index, 'degree', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
-                    <motion.input
-                      whileFocus={{ scale: 1.01 }}
+                    <input
                       type="text"
                       placeholder="Field of Study"
                       value={edu.field}
@@ -390,24 +361,21 @@ const ResumeForm = ({ initialData, onSave, isEdit }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                     <div className="grid grid-cols-3 gap-3">
-                      <motion.input
-                        whileFocus={{ scale: 1.01 }}
+                      <input
                         type="month"
                         placeholder="Start Date"
                         value={edu.startDate}
                         onChange={(e) => handleArrayChange('education', index, 'startDate', e.target.value)}
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       />
-                      <motion.input
-                        whileFocus={{ scale: 1.01 }}
+                      <input
                         type="month"
                         placeholder="End Date"
                         value={edu.endDate}
                         onChange={(e) => handleArrayChange('education', index, 'endDate', e.target.value)}
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       />
-                      <motion.input
-                        whileFocus={{ scale: 1.01 }}
+                      <input
                         type="text"
                         placeholder="GPA"
                         value={edu.gpa}
