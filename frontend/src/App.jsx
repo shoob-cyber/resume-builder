@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ResumeForm from './components/ResumeForm';
 import ResumePreview from './components/ResumePreview';
 import ResumeList from './components/ResumeList';
+import ATSAnalyzer from './components/ATSAnalyzer';
 
 const App = () => {
   const [currentResume, setCurrentResume] = useState(null);
@@ -65,6 +66,15 @@ const App = () => {
               <h1 className="text-3xl font-bold text-gradient">Resume Builder</h1>
             </motion.div>
             
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setView('ats')}
+                className="px-4 py-2 bg-white text-gray-700 rounded-xl hover:bg-gray-50 font-medium shadow border border-gray-200"
+              >
+                ATS Analyzer
+              </button>
+            </div>
+
             <AnimatePresence mode="wait">
               {view !== 'list' && (
                 <motion.button
@@ -114,6 +124,17 @@ const App = () => {
                 isEdit={view === 'edit'}
               />
               <ResumePreview resume={currentResume} />
+            </motion.div>
+          )}
+          {view === 'ats' && (
+            <motion.div
+              key="ats"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ATSAnalyzer />
             </motion.div>
           )}
         </AnimatePresence>

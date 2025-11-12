@@ -22,6 +22,9 @@ app.get("/", (req, res) => {
 
 import resumeRoutes from "./routes/resumeRoutes.js";
 app.use("/api/resumes", resumeRoutes);
+import atsRoutes from "./routes/atsRoutes.js";
+// Proxy route that forwards analyze requests to the Python ATS microservice
+app.use("/api/analyze", atsRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
