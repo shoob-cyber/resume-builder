@@ -80,18 +80,33 @@ def _prepare_nlp():
 
 
 def _extract_keywords_from_text(text: str, top_n: int = 30):
+    # If NLTK isn't available, or required corpora are missing, fall back to a simple regex-based extractor.
     if not nltk:
-        # fallback: simple split and frequency
         tokens = re.findall(r"\b[a-zA-Z0-9+-#\.]+\b", text.lower())
         counter = Counter([t for t in tokens if len(t) > 2])
         return [k for k, _ in counter.most_common(top_n)]
 
-    lemmatizer = WordNetLemmatizer()
-    tokens = word_tokenize(text.lower())
-    words = [w for w in tokens if w.isalpha()]
-    stop = set(stopwords.words('english'))
-    filtered = [lemmatizer.lemmatize(w) for w in words if w not in stop and len(w) > 2]
-    counter = Counter(filtered)
+    # Try a quick pre-check to see if NLTK corpora are present and usable.
+    try:
+        # ensure required corpora are available
+        _ = stopwords.words('english')
+        _ = word_tokenize("test")
+        _ = WordNetLemmatizer()
+        # If above succeeded, perform full NLTK-based extraction.
+        lemmatizer = WordNetLemmatizer()
+        tokens = word_tokenize(text.lower())
+        words = [w for w in tokens if w.isalpha()]
+        stop = set(stopwords.words('english'))
+        filtered = [lemmatizer.lemmatize(w) for w in words if w not in stop and len(w) > 2]
+        counter = Counter(filtered)
+        return [k for k, _ in counter.most_common(top_n)]
+    except Exception as e:
+        # Any failure (missing corpora, SSL, etc.) - log and fallback to regex extractor.
+        print('NLTK unavailable or failed during processing, falling back to simple extractor:', e)
+
+    # Fallback extractor (simple, robust)
+    tokens = re.findall(r"\b[a-zA-Z0-9+\-#\.]+\b", text.lower())
+    counter = Counter([t for t in tokens if len(t) > 2])
     return [k for k, _ in counter.most_common(top_n)]
 
 

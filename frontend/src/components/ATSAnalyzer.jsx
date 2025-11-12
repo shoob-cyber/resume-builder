@@ -63,7 +63,11 @@ const ATSAnalyzer = () => {
       if (file) form.append('resume', file, file.name);
       form.append('jd', jd);
 
-      const res = await axios.post('/api/analyze', form, {
+  // Call the backend Express API (which proxies to the Python ATS microservice).
+  // In Vite the env vars are available via import.meta.env and should be prefixed with VITE_.
+  // Fallback to http://localhost:5000 in development.
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(`${backendUrl}/api/analyze`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000,
       });
