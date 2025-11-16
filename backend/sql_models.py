@@ -17,6 +17,8 @@ class Resume(Base):
     filename = Column(String(255), nullable=False)
     text = Column(Text, nullable=False)
     skills = relationship("Skill", secondary=resume_skills, back_populates="resumes")
+    # store embedding as JSON text (for Postgres prefer pgvector)
+    embedding_json = Column(Text, nullable=True)
 
 
 class Skill(Base):
