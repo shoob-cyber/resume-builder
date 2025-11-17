@@ -1,17 +1,22 @@
 import React, { useState } from 'react'
+import { score } from '../services/apiClient'
 
 export default function ATSAnalyzer() {
   const [jobText, setJobText] = useState('')
   const [resumeText, setResumeText] = useState('')
-  const [score, setScore] = useState<number | null>(null)
+  const [result, setResult] = useState<any | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const onMatch = () => {
-    // placeholder similarity: fraction of shared words
-    const a = new Set(resumeText.split(/\W+/).filter(Boolean))
-    const b = new Set(jobText.split(/\W+/).filter(Boolean))
-    const intersect = [...a].filter(x => b.has(x)).length
-    const denom = Math.max(a.size, b.size, 1)
-    setScore(intersect / denom)
+  const onMatch = async () => {
+    setLoading(true)
+    try {
+      const res = await score({ resume_text: resumeText, job_description: jobText })
+      setResult(res)
+    } catch (err: any) {
+      alert('Error: ' + (err?.message || String(err)))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -19,8 +24,19 @@ export default function ATSAnalyzer() {
       <h2 className="text-lg font-semibold mb-2">ATS Analyzer</h2>
       <textarea placeholder="Job description" value={jobText} onChange={(e) => setJobText(e.target.value)} className="w-full p-2 border mb-2" rows={6} />
       <textarea placeholder="Resume text" value={resumeText} onChange={(e) => setResumeText(e.target.value)} className="w-full p-2 border mb-2" rows={6} />
-      <button onClick={onMatch} className="px-3 py-1 bg-blue-600 text-white rounded">Check Match</button>
-      {score != null && <div className="mt-2">Score: {score.toFixed(3)}</div>}
+      <button onClick={onMatch} disabled={loading} className="px-3 py-1 bg-blue-600 text-white rounded">{loading ? 'Checking…' : 'Check Match'}</button>
+      {result && (
+        <div className="mt-4 p-3 border rounded bg-white">
+          <div><strong>ATS Score:</strong> {result.atsScore}</div>
+          <div><strong>Keyword Match:</strong> {result.keywordMatch}%</div>
+          <div><strong>Present Sections:</strong> {result.presentSections?.join(', ')}</div>
+          <div className="mt-2"><strong>Suggestions:</strong>
+            <ul className="list-disc ml-6 mt-1">
+              {(result.suggestions || []).map((s: string, i: number) => <li key={i}>{s}</li>)}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

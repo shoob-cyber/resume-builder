@@ -24,7 +24,7 @@ type FormState = {
   certifications: any[]
 }
 
-export default function ResumeForm({ initialData, onSave, isEdit }: { initialData?: any; onSave?: () => void; isEdit?: boolean }) {
+export default function ResumeForm({ initialData, onSave, isEdit, onUploaded }: { initialData?: any; onSave?: () => void; isEdit?: boolean; onUploaded?: (r: Resume) => void }) {
   const [formData, setFormData] = useState<FormState>({
     personalInfo: { fullName: '', email: '', phone: '', address: '', linkedin: '', website: '' },
     summary: '',
@@ -87,7 +87,9 @@ export default function ResumeForm({ initialData, onSave, isEdit }: { initialDat
       }
       // send as plain text for now (server parses with LLM to extract skills)
       const text = JSON.stringify(cleanedData)
-      await analyzeResume({ filename: formData.personalInfo.fullName || 'resume', text, skills: cleanedData.skills })
+      const res = await analyzeResume({ filename: formData.personalInfo.fullName || 'resume', text, skills: cleanedData.skills })
+      // notify parent with returned Resume
+      onUploaded?.(res)
       setTimeout(() => {
         setSaving(false)
         onSave?.()

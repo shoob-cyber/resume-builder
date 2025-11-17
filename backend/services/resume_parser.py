@@ -7,7 +7,7 @@ from typing import Dict
 from concurrent.futures import ThreadPoolExecutor
 
 import pdfplumber
-from langchain import OpenAI
+import openai
 
 _executor = ThreadPoolExecutor(max_workers=1)
 
@@ -36,13 +36,21 @@ async def parse_resume_text(text: str) -> Dict:
 
     def _call_llm(t: str):
         try:
-            llm = OpenAI(temperature=0)
+            api_key = os.environ.get("OPENAI_API_KEY")
+            if not api_key:
+                return list(candidates)[:25]
+            # prefer chat completion
             prompt = (
                 "Extract a JSON array called skills from the following resume text. Only output JSON.\nText:\n" + t[:8000]
             )
-            resp = llm(prompt)
+            resp = openai.ChatCompletion.create(
+                model=os.environ.get("OPENAI_CHAT_MODEL", "gpt-3.5-turbo"),
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0,
+            )
+            content = resp["choices"][0]["message"]["content"]
             try:
-                skills = json.loads(resp)
+                skills = json.loads(content)
                 if isinstance(skills, list):
                     return skills
             except Exception:

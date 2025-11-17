@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from schemas import MatchRequest, MatchResponse
 from services import embedding_service, matcher
+from services import ats_scoring
 from db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sql_models import Resume as ResumeModel, JobDescription as JobModel
@@ -20,6 +21,17 @@ async def match_endpoint(req: MatchRequest, db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.post("/score")
+async def score_endpoint(req: MatchRequest):
+    """Return ATS-style analysis (keywords, sections, readability, suggestions)."""
+    try:
+        resp = ats_scoring.analyze_resume_vs_jd(req.resume_text, req.job_description)
+        return resp
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/match_ids", response_model=MatchResponse)
 async def match_ids(resume_id: int, job_id: int, db: AsyncSession = Depends(get_db)):

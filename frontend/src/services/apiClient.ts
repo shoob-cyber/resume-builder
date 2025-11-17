@@ -1,6 +1,6 @@
 import { Resume, JobDescription, MatchResponse } from '../types'
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:8000'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, init)
@@ -43,5 +43,13 @@ export const matchByIds = async (resume_id: number, job_id: number): Promise<Mat
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ resume_id, job_id } as any),
+  })
+}
+
+export const score = async (payload: { resume_text: string; job_description: string }): Promise<any> => {
+  return request<any>('/ats/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   })
 }

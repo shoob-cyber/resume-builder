@@ -8,21 +8,26 @@ import asyncio
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
 
-from langchain.embeddings import OpenAIEmbeddings
+import openai
 
 _executor = ThreadPoolExecutor(max_workers=2)
 
-# initialize LangChain embeddings with model name
-_emb = OpenAIEmbeddings(model="text-embedding-3-large")
+# prefer env var or default model
+_EMBED_MODEL = os.environ.get("OPENAI_EMBED_MODEL", "text-embedding-3-large")
 
 
 async def embed_text(text: str) -> List[float]:
-    """Return embedding vector for the provided text.
+    """Return embedding vector for the provided text using OpenAI's embeddings API.
 
-    LangChain's embedding call is synchronous; run in threadpool.
+    Runs the blocking openai call in a thread executor so it can be awaited from async code.
     """
+    def _call():
+        resp = openai.Embedding.create(model=_EMBED_MODEL, input=text)
+        # OpenAI returns a list of data items; take the first embedding
+        return resp["data"][0]["embedding"]
+
     loop = asyncio.get_running_loop()
-    vec = await loop.run_in_executor(_executor, lambda: _emb.embed_query(text))
+    vec = await loop.run_in_executor(_executor, _call)
     return vec
 
 
