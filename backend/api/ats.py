@@ -7,6 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sql_models import Resume as ResumeModel, JobDescription as JobModel
 from sqlalchemy import select
 import json
+from sql_models import Label as LabelModel
+from db import get_db
+from sqlalchemy import insert
+from services import trainer
+from db import AsyncSessionLocal
 
 router = APIRouter()
 
@@ -54,5 +59,37 @@ async def match_ids(resume_id: int, job_id: int, db: AsyncSession = Depends(get_
         return MatchResponse(score=score, details={"method": "db-embeddings+cosine"})
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/label")
+async def label_pair(payload: dict, db: AsyncSession = Depends(get_db)):
+    """Store a human label for a resume-job pair. Body: {resume_id, job_id, label}
+
+    label: 1 accepted/good, 0 rejected/bad
+    """
+    try:
+        rid = int(payload.get("resume_id"))
+        jid = int(payload.get("job_id"))
+        lab = int(payload.get("label"))
+    except Exception:
+        raise HTTPException(status_code=400, detail="resume_id, job_id, label required")
+    obj = LabelModel(resume_id=rid, job_id=jid, label=lab)
+    db.add(obj)
+    await db.commit()
+    await db.refresh(obj)
+    return {"status": "ok", "id": obj.id}
+
+
+@router.post("/train")
+async def train_model():
+    """Trigger training of the reranker from stored labels. Requires LightGBM.
+
+    Returns path to saved model or error.
+    """
+    try:
+        path = await trainer.train(AsyncSessionLocal)
+        return {"status": "ok", "model_path": path}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

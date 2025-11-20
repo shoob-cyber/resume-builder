@@ -6,6 +6,8 @@ from db import get_db
 from sql_models import JobDescription as JobModel
 from services import embedding_service
 from pydantic import BaseModel
+from sql_models import _HAS_PGVECTOR
+from services import faiss_index
 
 router = APIRouter()
 
@@ -31,6 +33,13 @@ async def create_job(payload: JobCreate, db: AsyncSession = Depends(get_db)):
     # store embedding as JSON in a new column 'embedding_json' if exists
     try:
         job.embedding_json = embedding_service.embedding_to_json(emb)
+        if _HAS_PGVECTOR and hasattr(job, 'embedding_vector'):
+            job.embedding_vector = emb
+    except Exception:
+        pass
+    # optionally index job text into FAISS as well (may be useful for hybrid search)
+    try:
+        faiss_index.index_resume(job.id, emb)
     except Exception:
         pass
     await db.commit()

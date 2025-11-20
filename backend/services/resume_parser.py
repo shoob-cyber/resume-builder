@@ -1,15 +1,46 @@
-"""Resume parsing utilities: extract text from bytes and extract skills via LLM."""
+"""Resume parsing utilities: extract text from bytes and extract skills.
+
+This module prefers a local spaCy NER/noun-chunk extraction when available
+for deterministic, fast extraction. If spaCy is not installed, it falls back
+to an LLM-based extraction (OpenAI) if `OPENAI_API_KEY` is set, otherwise a
+simple regex heuristic is returned.
+"""
 import io
 import re
+import os
 import json
 import asyncio
-from typing import Dict
+from typing import Dict, List
 from concurrent.futures import ThreadPoolExecutor
 
 import pdfplumber
-import openai
 
 _executor = ThreadPoolExecutor(max_workers=1)
+
+
+def _spacy_extract(text: str) -> List[str]:
+    try:
+        import spacy
+        # try common small model; user may need to `python -m spacy download en_core_web_sm`
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except Exception:
+            nlp = spacy.load("en_core_web_sm", exclude=["tok2vec"]) if "en_core_web_sm" in spacy.util.get_installed_models() else None
+        if not nlp:
+            return []
+        doc = nlp(text[:20000])
+        candidates = set()
+        # use named entities and noun chunks as candidate skills
+        for ent in doc.ents:
+            if ent.label_ in {"ORG", "PRODUCT", "LANGUAGE", "WORK_OF_ART", "NORP", "TECH"} or len(ent.text) <= 40:
+                candidates.add(ent.text.strip())
+        for chunk in doc.noun_chunks:
+            t = chunk.text.strip()
+            if 2 <= len(t) <= 40:
+                candidates.add(t)
+        return list(candidates)
+    except Exception:
+        return []
 
 
 async def parse_resume_bytes(data: bytes, filename: str = "resume") -> Dict:
@@ -27,19 +58,28 @@ async def parse_resume_bytes(data: bytes, filename: str = "resume") -> Dict:
 
 
 async def parse_resume_text(text: str) -> Dict:
-    """Extract skills using a small LLM prompt. Returns {'text': text, 'skills': [...]}
+    """Return {'text': text, 'skills': [...]}.
 
-    The LLM call is wrapped in a thread executor to avoid blocking.
+    Strategy:
+    - Try spaCy extraction if available.
+    - Else, if OPENAI_API_KEY present, call OpenAI ChatCompletion to extract JSON array.
+    - Else fall back to regex heuristics.
     """
-    # quick heuristic candidates
-    candidates = set(re.findall(r"\b[A-Z][a-zA-Z+#\.]{1,30}\b", text))
+    # spaCy deterministic pass
+    candidates = _spacy_extract(text)
+    if candidates:
+        return {"text": text, "skills": candidates}
+
+    # quick heuristic candidates (fallback)
+    regex_candidates = set(re.findall(r"\b[A-Z][a-zA-Z+#\.]{1,30}\b", text))
 
     def _call_llm(t: str):
         try:
             api_key = os.environ.get("OPENAI_API_KEY")
             if not api_key:
-                return list(candidates)[:25]
-            # prefer chat completion
+                return list(regex_candidates)[:25]
+            import openai
+            openai.api_key = api_key
             prompt = (
                 "Extract a JSON array called skills from the following resume text. Only output JSON.\nText:\n" + t[:8000]
             )
@@ -54,9 +94,9 @@ async def parse_resume_text(text: str) -> Dict:
                 if isinstance(skills, list):
                     return skills
             except Exception:
-                return list(candidates)[:25]
+                return list(regex_candidates)[:25]
         except Exception:
-            return list(candidates)[:25]
+            return list(regex_candidates)[:25]
 
     loop = asyncio.get_running_loop()
     skills = await loop.run_in_executor(_executor, lambda: _call_llm(text))

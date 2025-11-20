@@ -2,21 +2,23 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-const CircularScore = ({ score }) => {
-  const radius = 60;
-  const stroke = 10;
-  const normalizedRadius = radius - stroke * 0.5;
+const CircularScore = ({ score = 0 }) => {
+  const radius = 68;
+  const stroke = 8;
+  const normalizedRadius = radius - stroke / 2;
   const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const percent = Math.max(0, Math.min(100, Math.round(score)));
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
 
   return (
-    <svg height={radius * 2} width={radius * 2} className="mx-auto">
+    <svg height={radius * 2} width={radius * 2}>
       <defs>
-        <linearGradient id="grad" x1="0%" x2="100%">
-          <stop offset="0%" stopColor="#7C3AED" />
-          <stop offset="100%" stopColor="#06B6D4" />
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#7c3aed" />
+          <stop offset="100%" stopColor="#06b6d4" />
         </linearGradient>
       </defs>
+
       <circle
         stroke="#e6e6e6"
         fill="transparent"
@@ -37,7 +39,7 @@ const CircularScore = ({ score }) => {
         cy={radius}
         transform={`rotate(-90 ${radius} ${radius})`}
       />
-      <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="20" fill="#111">{score}%</text>
+      <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="20" fill="#111">{percent}%</text>
     </svg>
   );
 };
@@ -50,6 +52,14 @@ const ATSAnalyzer = () => {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
+  const readFileText = (f) => new Promise((resolve) => {
+    if (!f) return resolve('');
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => resolve('');
+    reader.readAsText(f);
+  });
+
   const handleAnalyze = async () => {
     setError(null);
     setResult(null);
@@ -59,16 +69,11 @@ const ATSAnalyzer = () => {
     }
     setLoading(true);
     try {
-      const form = new FormData();
-      if (file) form.append('resume', file, file.name);
-      form.append('jd', jd);
+      const backendBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ? import.meta.env.VITE_API_BASE : 'http://localhost:8000';
+      const resumeText = file ? await readFileText(file) : '';
 
-  // Call the backend Express API (which proxies to the Python ATS microservice).
-  // In Vite the env vars are available via import.meta.env and should be prefixed with VITE_.
-  // Fallback to http://localhost:5000 in development.
-  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await axios.post(`${backendUrl}/api/analyze`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const res = await axios.post(`${backendBase}/ats/score`, { resume_text: resumeText, job_description: jd }, {
+        headers: { 'Content-Type': 'application/json' },
         timeout: 120000,
       });
 
@@ -87,7 +92,6 @@ const ATSAnalyzer = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium mb-2">Upload Resume (PDF or DOCX)</label>
-          {/* Hidden native file input, triggered by a styled button for a cleaner UI */}
           <input
             ref={fileInputRef}
             type="file"

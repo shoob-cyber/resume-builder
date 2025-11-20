@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/resumes';
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ? import.meta.env.VITE_API_BASE : 'http://localhost:8000'
+const API_URL = `${API_BASE}/resume/list`
 
 const ResumeList = ({ onCreateNew, onEdit }) => {
   const [resumes, setResumes] = useState([]);
@@ -15,7 +16,8 @@ const ResumeList = ({ onCreateNew, onEdit }) => {
   const fetchResumes = async () => {
     try {
       const response = await axios.get(API_URL);
-      setResumes(response.data.data);
+      // FastAPI returns a list of resumes directly
+      setResumes(response.data || response);
     } catch (error) {
       console.error('Error fetching resumes:', error);
     } finally {
@@ -26,10 +28,13 @@ const ResumeList = ({ onCreateNew, onEdit }) => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this resume?')) {
       try {
-        await axios.delete(`${API_URL}/${id}`);
+        // backend currently does not implement delete; attempt and refresh if succeeds
+        await axios.delete(`${API_BASE}/resume/${id}`);
         fetchResumes();
       } catch (error) {
-        console.error('Error deleting resume:', error);
+        console.error('Error deleting resume (may not be supported by backend):', error);
+        // refresh list anyway
+        fetchResumes();
       }
     }
   };

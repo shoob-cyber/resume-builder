@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sql_models import Resume as ResumeModel, Skill as SkillModel
 from sqlalchemy import select
 from services import resume_parser, embedding_service
+from services import faiss_index
+from sql_models import _HAS_PGVECTOR
 from schemas import ResumeRead, ResumeCreate
 
 router = APIRouter()
@@ -43,6 +45,19 @@ async def upload_resume(file: UploadFile = File(...), db: AsyncSession = Depends
     # embeddings
     emb = await embedding_service.embed_text(parsed["text"])
     resume_obj.embedding_json = embedding_service.embedding_to_json(emb)
+    # if pgvector is enabled in models, store vector directly as well
+    try:
+        if _HAS_PGVECTOR and hasattr(resume_obj, 'embedding_vector'):
+            resume_obj.embedding_vector = emb
+    except Exception:
+        # ignore if assignment isn't supported in current DB
+        pass
+    # index into FAISS in-memory index (optional)
+    try:
+        faiss_index.index_resume(resume_obj.id, emb)
+    except Exception:
+        # no-op if FAISS not installed or indexing fails
+        pass
 
     await db.commit()
     await db.refresh(resume_obj)

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/resumes';
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ? import.meta.env.VITE_API_BASE : 'http://localhost:8000'
+const API_URL = `${API_BASE}/resume`
 
 const ResumeForm = ({ initialData, onSave, isEdit }) => {
   const [formData, setFormData] = useState({
@@ -93,11 +94,13 @@ const ResumeForm = ({ initialData, onSave, isEdit }) => {
         skills: formData.skills.filter(s => s.trim() !== '')
       };
       
-      if (isEdit) {
-        await axios.put(`${API_URL}/${initialData._id}`, cleanedData);
-      } else {
-        await axios.post(API_URL, cleanedData);
+      // The new FastAPI backend accepts resume text via /resume/analyze (JSON)
+      const payload = {
+        filename: (formData.personalInfo && formData.personalInfo.fullName) || 'inline',
+        text: JSON.stringify(cleanedData),
+        skills: formData.skills || [],
       }
+      await axios.post(`${API_BASE}/resume/analyze`, payload);
       setTimeout(() => {
         setSaving(false);
         onSave();
